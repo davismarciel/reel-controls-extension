@@ -5,7 +5,7 @@
   "description": "__MSG_extDescription__",
   "default_locale": "pt_BR",
   "author": "Davi Sá Marciel",
-  "homepage_url": "https://github.com/",
+  "homepage_url": "https://github.com/davismarciel/reel-controls-extension",
   "permissions": ["storage"],
   "browser_specific_settings": {
     "gecko": {
