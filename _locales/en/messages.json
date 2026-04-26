@@ -1,0 +1,53 @@
+{
+  "extName": {
+    "message": "Reel Controls - Progress and Volume"
+  },
+  "extDescription": {
+    "message": "Adds progress and volume controls to Instagram Reels."
+  },
+  "controlsGroupLabel": {
+    "message": "Video controls"
+  },
+  "progressLabel": {
+    "message": "Video progress"
+  },
+  "muteToggleLabel": {
+    "message": "Toggle mute"
+  },
+  "volumeLabel": {
+    "message": "Volume"
+  },
+  "optionsTitle": {
+    "message": "Reel Controls Settings"
+  },
+  "optionsSubtitle": {
+    "message": "Customize extension behavior for Instagram Reels."
+  },
+  "settingEnableInstagram": {
+    "message": "Enable controls on Instagram"
+  },
+  "settingInitialVolume": {
+    "message": "Initial volume"
+  },
+  "settingHideDelay": {
+    "message": "Auto-hide delay"
+  },
+  "hideDelayHint": {
+    "message": "Set a value between 1000 and 10000 ms."
+  },
+  "buttonSave": {
+    "message": "Save"
+  },
+  "buttonReset": {
+    "message": "Restore defaults"
+  },
+  "savedSuccess": {
+    "message": "Settings saved successfully."
+  },
+  "resetSuccess": {
+    "message": "Settings restored to defaults."
+  },
+  "msSuffix": {
+    "message": "ms"
+  }
+}

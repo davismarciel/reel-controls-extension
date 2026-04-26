@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reel Controls Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card" aria-labelledby="options-title">
+        <h1 id="options-title" data-i18n="optionsTitle">
+          Reel Controls Settings
+        </h1>
+        <p class="subtitle" data-i18n="optionsSubtitle">
+          Customize extension behavior for Instagram Reels.
+        </p>
+
+        <form id="settings-form" novalidate>
+          <label class="setting setting-check" for="enabledInstagram">
+            <input
+              id="enabledInstagram"
+              name="enabledInstagram"
+              type="checkbox"
+            />
+            <span data-i18n="settingEnableInstagram"
+              >Enable controls on Instagram</span
+            >
+          </label>
+
+          <label class="setting" for="initialVolume">
+            <span class="setting-title" data-i18n="settingInitialVolume"
+              >Initial volume</span
+            >
+            <div class="range-wrap">
+              <input
+                id="initialVolume"
+                name="initialVolume"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+              />
+              <output id="initialVolumeValue" for="initialVolume">100%</output>
+            </div>
+          </label>
+
+          <label class="setting" for="hideDelayMs">
+            <span class="setting-title" data-i18n="settingHideDelay"
+              >Auto-hide delay</span
+            >
+            <div class="number-wrap">
+              <input
+                id="hideDelayMs"
+                name="hideDelayMs"
+                type="number"
+                min="1000"
+                max="10000"
+                step="100"
+                inputmode="numeric"
+              />
+              <span class="suffix" data-i18n="msSuffix">ms</span>
+            </div>
+            <small class="hint" data-i18n="hideDelayHint"
+              >Set a value between 1000 and 10000 ms.</small
+            >
+          </label>
+
+          <div class="actions">
+            <button
+              id="save-btn"
+              type="submit"
+              class="btn primary"
+              data-i18n="buttonSave"
+            >
+              Save
+            </button>
+            <button
+              id="reset-btn"
+              type="button"
+              class="btn"
+              data-i18n="buttonReset"
+            >
+              Restore defaults
+            </button>
+          </div>
+
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

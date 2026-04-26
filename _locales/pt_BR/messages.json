@@ -1,0 +1,53 @@
+{
+  "extName": {
+    "message": "Reel Controls - Progresso e Volume"
+  },
+  "extDescription": {
+    "message": "Adiciona slider de progresso e controle de volume nos Reels do Instagram."
+  },
+  "controlsGroupLabel": {
+    "message": "Controles de video"
+  },
+  "progressLabel": {
+    "message": "Progresso do video"
+  },
+  "muteToggleLabel": {
+    "message": "Ativar ou desativar som"
+  },
+  "volumeLabel": {
+    "message": "Volume"
+  },
+  "optionsTitle": {
+    "message": "Configuracoes do Reel Controls"
+  },
+  "optionsSubtitle": {
+    "message": "Ajuste o comportamento da extensao para os Reels do Instagram."
+  },
+  "settingEnableInstagram": {
+    "message": "Ativar controles no Instagram"
+  },
+  "settingInitialVolume": {
+    "message": "Volume inicial"
+  },
+  "settingHideDelay": {
+    "message": "Tempo para ocultar controles"
+  },
+  "hideDelayHint": {
+    "message": "Defina entre 1000 e 10000 ms."
+  },
+  "buttonSave": {
+    "message": "Salvar"
+  },
+  "buttonReset": {
+    "message": "Restaurar padrao"
+  },
+  "savedSuccess": {
+    "message": "Configuracoes salvas com sucesso."
+  },
+  "resetSuccess": {
+    "message": "Configuracoes restauradas para o padrao."
+  },
+  "msSuffix": {
+    "message": "ms"
+  }
+}
