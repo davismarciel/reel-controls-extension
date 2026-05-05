@@ -7,6 +7,10 @@
     hideDelayMs: 2500,
     enabledInstagram: true,
   };
+  const STORAGE_DEFAULTS = {
+    ...DEFAULT_SETTINGS,
+    lastVolume: null,
+  };
   const i18n = {
     controlsGroup: "Controles de video",
     progressLabel: "Progresso do video",
@@ -40,17 +44,38 @@
 
       try {
         if (storage.get.length <= 1) {
-          Promise.resolve(storage.get(DEFAULT_SETTINGS))
+          Promise.resolve(storage.get(STORAGE_DEFAULTS))
             .then((result) => resolve(result || {}))
             .catch(() => resolve({}));
           return;
         }
 
-        storage.get(DEFAULT_SETTINGS, (result) => {
+        storage.get(STORAGE_DEFAULTS, (result) => {
           resolve(result || {});
         });
       } catch {
         resolve({});
+      }
+    });
+  }
+
+  function setStorageValues(values) {
+    return new Promise((resolve) => {
+      const storage = extApi?.storage?.local;
+      if (!storage || typeof storage.set !== "function") {
+        resolve();
+        return;
+      }
+
+      try {
+        if (storage.set.length <= 1) {
+          Promise.resolve(storage.set(values)).then(resolve).catch(resolve);
+          return;
+        }
+
+        storage.set(values, () => resolve());
+      } catch {
+        resolve();
       }
     });
   }
@@ -147,9 +172,15 @@
     video._reelCtrl = true;
 
     if (!video.dataset.reelInitialVolumeApplied) {
+      const storedVolume = Number(settings.lastVolume);
       const configuredVolume = Math.max(
         0,
-        Math.min(100, Number(settings.initialVolume)),
+        Math.min(
+          100,
+          Number.isFinite(storedVolume)
+            ? storedVolume
+            : Number(settings.initialVolume),
+        ),
       );
       video.volume = configuredVolume / 100;
       video.muted = configuredVolume === 0;
@@ -272,14 +303,54 @@
       resetHideTimer();
     });
 
+    let lastVolumeSave = null;
+    let volumeSaveTimer;
+    let isAutoRestoring = false;
+    let userVolumeChange = false;
+
+    function scheduleVolumeSave(value) {
+      const clamped = Math.max(0, Math.min(100, Math.round(Number(value))));
+      if (!Number.isFinite(clamped) || clamped === lastVolumeSave) return;
+      lastVolumeSave = clamped;
+      clearTimeout(volumeSaveTimer);
+      volumeSaveTimer = setTimeout(() => {
+        settings.lastVolume = clamped;
+        setStorageValues({ lastVolume: clamped });
+      }, 150);
+    }
+
+    function restoreVolumeFromSettings() {
+      const storedVolume = Number(settings.lastVolume);
+      const targetVolume = Math.max(
+        0,
+        Math.min(
+          100,
+          Number.isFinite(storedVolume)
+            ? storedVolume
+            : Number(settings.initialVolume),
+        ),
+      );
+      if (targetVolume <= 0) return;
+
+      isAutoRestoring = true;
+      video.muted = false;
+      video.volume = targetVolume / 100;
+      volumeSlider.value = targetVolume;
+      setSliderVar(volumeSlider, targetVolume);
+      updateVolButtonIcon();
+      volBtn.setAttribute("aria-pressed", "false");
+    }
+
     volumeSlider.addEventListener("input", (e) => {
       isVolScrubbing = true;
+      userVolumeChange = true;
       resetHideTimer();
       const val = e.target.value;
       setSliderVar(volumeSlider, val);
       video.volume = val / 100;
       video.muted = val == 0;
       updateVolButtonIcon();
+      scheduleVolumeSave(val);
     });
 
     volumeSlider.addEventListener("change", () => {
@@ -288,6 +359,7 @@
     });
 
     volBtn.addEventListener("click", () => {
+      userVolumeChange = true;
       video.muted = !video.muted;
       if (!video.muted && video.volume === 0) {
         video.volume = 1;
@@ -301,11 +373,24 @@
 
     video.addEventListener("volumechange", () => {
       if (isVolScrubbing) return;
+      if (isAutoRestoring) {
+        isAutoRestoring = false;
+        return;
+      }
       const displayVol = video.muted ? 0 : video.volume * 100;
       volumeSlider.value = displayVol;
       setSliderVar(volumeSlider, displayVol);
       updateVolButtonIcon();
       volBtn.setAttribute("aria-pressed", video.muted ? "true" : "false");
+      if (userVolumeChange) {
+        userVolumeChange = false;
+        scheduleVolumeSave(displayVol);
+        return;
+      }
+
+      if (displayVol === 0) {
+        restoreVolumeFromSettings();
+      }
     });
 
     const obs = new MutationObserver(() => {
