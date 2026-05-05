@@ -412,8 +412,25 @@
   function processVideos() {
     if (!shouldRunOnCurrentSite()) return;
     document.querySelectorAll("video").forEach((video) => {
-      if (!video._reelCtrl && isReelVideo(video)) {
+      if (video._reelCtrl) return;
+      if (isReelVideo(video)) {
         buildControls(video);
+        return;
+      }
+
+      if (!video._reelCtrlWatch && typeof ResizeObserver !== "undefined") {
+        video._reelCtrlWatch = true;
+        const ro = new ResizeObserver(() => {
+          if (!document.contains(video)) {
+            ro.disconnect();
+            return;
+          }
+          if (!video._reelCtrl && isReelVideo(video)) {
+            ro.disconnect();
+            buildControls(video);
+          }
+        });
+        ro.observe(video);
       }
     });
   }
