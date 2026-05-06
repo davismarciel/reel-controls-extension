@@ -10,6 +10,7 @@
   const STORAGE_DEFAULTS = {
     ...DEFAULT_SETTINGS,
     lastVolume: null,
+    lastAudibleVolume: null,
   };
   const i18n = {
     controlsGroup: "Controles de video",
@@ -97,6 +98,12 @@
     el.style.setProperty("--val", `${pct}%`);
   }
 
+  function clampVolume(value, fallback) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(100, Math.round(n)));
+  }
+
   function getVolLevel(muted, vol) {
     if (muted || vol === 0) return 0;
     if (vol < 0.5) return 1;
@@ -172,16 +179,11 @@
     video._reelCtrl = true;
 
     if (!video.dataset.reelInitialVolumeApplied) {
-      const storedVolume = Number(settings.lastVolume);
-      const configuredVolume = Math.max(
-        0,
-        Math.min(
-          100,
-          Number.isFinite(storedVolume)
-            ? storedVolume
-            : Number(settings.initialVolume),
-        ),
+      const fallbackVolume = clampVolume(
+        settings.initialVolume,
+        DEFAULT_SETTINGS.initialVolume,
       );
+      const configuredVolume = clampVolume(settings.lastVolume, fallbackVolume);
       video.volume = configuredVolume / 100;
       video.muted = configuredVolume === 0;
       video.dataset.reelInitialVolumeApplied = "true";
@@ -303,33 +305,46 @@
       resetHideTimer();
     });
 
+    const fallbackVolume = clampVolume(
+      settings.initialVolume,
+      DEFAULT_SETTINGS.initialVolume,
+    );
+    const storedVolume = clampVolume(settings.lastVolume, fallbackVolume);
+    const storedAudible = clampVolume(
+      settings.lastAudibleVolume,
+      storedVolume > 0 ? storedVolume : fallbackVolume,
+    );
+
+    let lastAudibleVolume = storedAudible > 0 ? storedAudible : fallbackVolume;
+    settings.lastAudibleVolume = lastAudibleVolume;
     let lastVolumeSave = null;
     let volumeSaveTimer;
     let isAutoRestoring = false;
     let userVolumeChange = false;
+    let suppressZeroSave = false;
 
     function scheduleVolumeSave(value) {
       const clamped = Math.max(0, Math.min(100, Math.round(Number(value))));
-      if (!Number.isFinite(clamped) || clamped === lastVolumeSave) return;
+      if (!Number.isFinite(clamped)) return;
+      settings.lastVolume = clamped;
+      if (clamped > 0) {
+        lastAudibleVolume = clamped;
+        settings.lastAudibleVolume = clamped;
+      }
+      if (clamped === lastVolumeSave) return;
       lastVolumeSave = clamped;
       clearTimeout(volumeSaveTimer);
       volumeSaveTimer = setTimeout(() => {
-        settings.lastVolume = clamped;
-        setStorageValues({ lastVolume: clamped });
+        setStorageValues({
+          lastVolume: settings.lastVolume,
+          lastAudibleVolume: settings.lastAudibleVolume,
+        });
       }, 150);
     }
 
     function restoreVolumeFromSettings() {
-      const storedVolume = Number(settings.lastVolume);
-      const targetVolume = Math.max(
-        0,
-        Math.min(
-          100,
-          Number.isFinite(storedVolume)
-            ? storedVolume
-            : Number(settings.initialVolume),
-        ),
-      );
+      const targetVolume =
+        lastAudibleVolume > 0 ? lastAudibleVolume : fallbackVolume;
       if (targetVolume <= 0) return;
 
       isAutoRestoring = true;
@@ -360,11 +375,14 @@
 
     volBtn.addEventListener("click", () => {
       userVolumeChange = true;
+      suppressZeroSave = true;
       video.muted = !video.muted;
       if (!video.muted && video.volume === 0) {
-        video.volume = 1;
-        volumeSlider.value = 100;
-        setSliderVar(volumeSlider, 100);
+        const targetVolume =
+          lastAudibleVolume > 0 ? lastAudibleVolume : fallbackVolume;
+        video.volume = targetVolume / 100;
+        volumeSlider.value = targetVolume;
+        setSliderVar(volumeSlider, targetVolume);
       }
       updateVolButtonIcon();
       volBtn.setAttribute("aria-pressed", video.muted ? "true" : "false");
@@ -384,6 +402,11 @@
       volBtn.setAttribute("aria-pressed", video.muted ? "true" : "false");
       if (userVolumeChange) {
         userVolumeChange = false;
+        if (displayVol === 0 && suppressZeroSave) {
+          suppressZeroSave = false;
+          return;
+        }
+        suppressZeroSave = false;
         scheduleVolumeSave(displayVol);
         return;
       }
